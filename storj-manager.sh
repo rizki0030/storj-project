@@ -14,7 +14,7 @@ STORAGE_SIZE="900GB"   # Sesuaikan kapasitas HDD
 install_node() {
     echo "[1/7] Update sistem..."
     apt-get update && apt-get upgrade -y
-    apt-get install -y docker.io curl ufw wget cron netcat
+    apt-get install -y docker.io curl ufw wget cron netcat-traditional
 
     echo "[2/7] Mount HDD ke $STORAGE ..."
     mkdir -p $STORAGE
