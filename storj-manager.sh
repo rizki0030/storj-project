@@ -26,7 +26,7 @@ check_docker() {
 install_node() {
     echo "[1/7] Update sistem..."
     apt-get update && apt-get upgrade -y
-    apt-get install -y curl ufw wget cron netcat
+    apt-get install -y curl ufw wget cron netcat-traditional
 
     echo "[2/7] Cek & install Docker..."
     check_docker
