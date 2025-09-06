@@ -2,10 +2,10 @@
 set -e
 
 ### === Konfigurasi User ===
-DOMAIN="xperientz.duckdns.org"
-DUCKDNS_TOKEN="a74ef857-4e78-46a6-bdc4-2cfa1f987308"
-EMAIL="rizkiwahyurianto0030@gmail.com"
-WALLET="0x5534AE0B7F591076843F2CFbbfB842a91096ec6c"
+DOMAIN="your domain"
+DUCKDNS_TOKEN="your tokens"
+EMAIL="yor email"
+WALLET="your wallet"
 NODE_NAME="storjnode"
 STORAGE="/srv/storj/node01"
 HDD_DEV="/dev/sda1"
@@ -14,7 +14,7 @@ STORAGE_SIZE="900GB"   # Sesuaikan kapasitas HDD
 install_node() {
     echo "[1/7] Update sistem..."
     apt-get update && apt-get upgrade -y
-    apt-get install -y docker.io curl ufw wget cron netcat-traditional
+    apt-get install -y docker.io curl ufw wget cron netcat
 
     echo "[2/7] Mount HDD ke $STORAGE ..."
     mkdir -p $STORAGE
@@ -22,7 +22,10 @@ install_node() {
     grep -q "$HDD_DEV" /etc/fstab || echo "$HDD_DEV $STORAGE ext4 defaults 0 2" >> /etc/fstab
 
     echo "[3/7] Siapkan direktori Storj..."
-    mkdir -p $STORAGE/identity $STORAGE/storage
+    mkdir -p $STORAGE/identity
+    mkdir -p $STORAGE/storage/blobs
+    mkdir -p $STORAGE/storage/temp
+    mkdir -p $STORAGE/storage/trash
 
     echo "[4/7] Setup DuckDNS updater..."
     mkdir -p /opt/duckdns
@@ -77,7 +80,9 @@ reset_node() {
 
     echo "[2/3] Hapus isi folder storage lama..."
     rm -rf $STORAGE/storage
-    mkdir -p $STORAGE/storage
+    mkdir -p $STORAGE/storage/blobs
+    mkdir -p $STORAGE/storage/temp
+    mkdir -p $STORAGE/storage/trash
 
     echo "[3/3] Folder identity tetap aman di: $STORAGE/identity"
     echo "✅ Reset selesai. Jalankan kembali menu Install untuk deploy ulang."
