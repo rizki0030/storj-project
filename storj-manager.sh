@@ -2,32 +2,47 @@
 set -e
 
 ### === Konfigurasi User ===
-DOMAIN="your domain"
-DUCKDNS_TOKEN="your tokens"
-EMAIL="yor email"
-WALLET="your wallet"
+DOMAIN="xperientz.duckdns.org"
+DUCKDNS_TOKEN="a74ef857-4e78-46a6-bdc4-2cfa1f987308"
+EMAIL="rizkiwahyurianto0030@gmail.com"
+WALLET="0x5534AE0B7F591076843F2CFbbfB842a91096ec6c"
 NODE_NAME="storjnode"
 STORAGE="/srv/storj/node01"
 HDD_DEV="/dev/sda1"
 STORAGE_SIZE="900GB"   # Sesuaikan kapasitas HDD
 
+### === Fungsi: Cek & Install Docker ===
+check_docker() {
+    if ! command -v docker &> /dev/null; then
+        echo "⚠️ Docker belum terinstall, menginstall sekarang..."
+        curl -fsSL https://get.docker.com | sh
+        systemctl enable docker
+        systemctl start docker
+    else
+        echo "✅ Docker sudah terinstall: $(docker --version)"
+    fi
+}
+
 install_node() {
     echo "[1/7] Update sistem..."
     apt-get update && apt-get upgrade -y
-    apt-get install -y docker.io curl ufw wget cron netcat-traditional
+    apt-get install -y curl ufw wget cron netcat
 
-    echo "[2/7] Mount HDD ke $STORAGE ..."
+    echo "[2/7] Cek & install Docker..."
+    check_docker
+
+    echo "[3/7] Mount HDD ke $STORAGE ..."
     mkdir -p $STORAGE
     mount $HDD_DEV $STORAGE || true
     grep -q "$HDD_DEV" /etc/fstab || echo "$HDD_DEV $STORAGE ext4 defaults 0 2" >> /etc/fstab
 
-    echo "[3/7] Siapkan direktori Storj..."
+    echo "[4/7] Siapkan direktori Storj..."
     mkdir -p $STORAGE/identity
     mkdir -p $STORAGE/storage/blobs
     mkdir -p $STORAGE/storage/temp
     mkdir -p $STORAGE/storage/trash
 
-    echo "[4/7] Setup DuckDNS updater..."
+    echo "[5/7] Setup DuckDNS updater..."
     mkdir -p /opt/duckdns
     cat <<EOF > /opt/duckdns/duck.sh
 #!/bin/bash
@@ -37,7 +52,7 @@ EOF
     crontab -l 2>/dev/null | grep -v 'duck.sh' | crontab -
     (crontab -l 2>/dev/null; echo "*/5 * * * * /opt/duckdns/duck.sh >/dev/null 2>&1") | crontab -
 
-    echo "[5/7] Deploy Storj node Docker..."
+    echo "[6/7] Deploy Storj node Docker..."
     docker stop $NODE_NAME || true
     docker rm $NODE_NAME || true
 
@@ -54,13 +69,13 @@ EOF
     --mount type=bind,source=$STORAGE/storage,destination=/app/config \
     storjlabs/storagenode:latest
 
-    echo "[6/7] Konfigurasi firewall..."
+    echo "[7/7] Konfigurasi firewall..."
     ufw allow 28967/tcp
     ufw allow 28967/udp
     ufw allow 14002/tcp
     ufw --force enable
 
-    echo "[7/7] Mengecek port terbuka..."
+    echo "[Done] Mengecek port terbuka..."
     if nc -z -v -w5 $DOMAIN 28967; then
       echo "✅ Port 28967 terbuka dan dapat diakses!"
     else
